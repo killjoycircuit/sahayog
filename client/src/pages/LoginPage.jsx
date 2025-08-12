@@ -65,7 +65,6 @@ const LoginPage = () => {
     if (e.key === 'Enter') handleSubmit();
   };
 
-  // The rest of your JSX remains exactly the same...
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-4 py-12">
       <div className="max-w-md w-full space-y-8">
