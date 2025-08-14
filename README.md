@@ -20,7 +20,7 @@ Built with the **MERN stack** (MongoDB, Express.js, React, Node.js) and enhanced
 
 ## 🛠️ Tech Stack
 
-**Frontend:** React.js, Tailwind CSS, Lucide-react icons  
+**Frontend:** React.js, Tailwind CSS
 **Backend:** Node.js, Express.js, MongoDB  
 **Version Control:** Git & GitHub
 
