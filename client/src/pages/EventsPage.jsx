@@ -1,8 +1,19 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { Link } from 'react-router-dom';
-import axios from 'axios';
-import { UserContext } from '../context/UserContext';
-import { Calendar, MapPin, Target, Users, Heart, Share2, Filter, Search, Plus } from 'lucide-react';
+import React, { useState, useEffect, useContext } from "react";
+import { Link } from "react-router-dom";
+import axios from "axios";
+import toast from "react-hot-toast";
+import { UserContext } from "../context/UserContext";
+import {
+  Calendar,
+  MapPin,
+  Target,
+  Users,
+  Heart,
+  Share2,
+  Filter,
+  Search,
+  Plus,
+} from "lucide-react";
 
 const EventsPage = () => {
   const { user } = useContext(UserContext);
@@ -12,12 +23,12 @@ const EventsPage = () => {
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
-    total: 0
+    total: 0,
   });
   const [filters, setFilters] = useState({
-    tags: '',
+    tags: "",
     isActive: true,
-    search: ''
+    search: "",
   });
 
   useEffect(() => {
@@ -32,48 +43,67 @@ const EventsPage = () => {
         limit: 9,
         isActive: filters.isActive,
       };
-      
+
       if (filters.tags) {
         params.tags = filters.tags;
       }
 
-      const response = await axios.get('/api/events', { params });
+      const response = await axios.get("/api/events", { params });
       setEvents(response.data.events);
       setPagination({
         currentPage: response.data.currentPage,
         totalPages: response.data.totalPages,
-        total: response.data.total
+        total: response.data.total,
       });
     } catch (err) {
-      setError('Failed to fetch events');
-      console.error('Error fetching events:', err);
+      setError("Failed to fetch events");
+      console.error("Error fetching events:", err);
     } finally {
       setLoading(false);
     }
   };
 
   const handleContribute = async (eventId, amount) => {
+    if (!user) {
+      toast.error("Please login to contribute");
+      return;
+    }
+
+    const contributionAmount = parseFloat(amount);
+    if (!contributionAmount || contributionAmount <= 0) {
+      toast.error("Please enter a valid contribution amount");
+      return;
+    }
+
     try {
       const response = await axios.patch(`/api/events/${eventId}/contribute`, {
-        amount: parseFloat(amount)
+        amount: contributionAmount,
       });
-      
+
       // Update the event in the local state
-      setEvents(events.map(event => 
-        event._id === eventId 
-          ? { ...event, currentAmount: response.data.currentAmount }
-          : event
-      ));
+      setEvents(
+        events.map((event) =>
+          event._id === eventId
+            ? { ...event, currentAmount: response.data.currentAmount }
+            : event,
+        ),
+      );
+
+      toast.success(
+        `Successfully contributed ₹${contributionAmount.toLocaleString()}!`,
+      );
     } catch (err) {
-      console.error('Error contributing to event:', err);
-      alert('Failed to process contribution');
+      console.error("Error contributing to event:", err);
+      const errorMessage =
+        err.response?.data?.error || "Failed to process contribution";
+      toast.error(errorMessage);
     }
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR'
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
     }).format(amount);
   };
 
@@ -82,18 +112,21 @@ const EventsPage = () => {
   };
 
   const EventCard = ({ event }) => {
-    const [contributionAmount, setContributionAmount] = useState('');
+    const [contributionAmount, setContributionAmount] = useState("");
     const [showContribute, setShowContribute] = useState(false);
 
-    const progress = getProgressPercentage(event.currentAmount, event.amountToRaise);
+    const progress = getProgressPercentage(
+      event.currentAmount,
+      event.amountToRaise,
+    );
 
     return (
       <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
         {/* Event Image */}
         <div className="h-48 bg-gray-200 relative">
-          {event.imageUrl || event.uploadedImage ? (
+          {event.imageUrl ? (
             <img
-              src={event.imageUrl || event.uploadedImage}
+              src={event.imageUrl}
               alt={event.title}
               className="w-full h-full object-cover"
             />
@@ -111,8 +144,12 @@ const EventsPage = () => {
 
         {/* Event Content */}
         <div className="p-6">
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">{event.title}</h3>
-          <p className="text-gray-600 text-sm mb-4 line-clamp-2">{event.description}</p>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            {event.title}
+          </h3>
+          <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+            {event.description}
+          </p>
 
           {/* Tags */}
           {event.tags && event.tags.length > 0 && (
@@ -160,7 +197,7 @@ const EventsPage = () => {
               />
             ) : (
               <div className="w-8 h-8 bg-teal-600 rounded-full flex items-center justify-center text-white text-sm font-medium mr-2">
-                {event.createdBy?.firstName?.charAt(0) || 'U'}
+                {event.createdBy?.firstName?.charAt(0) || "U"}
               </div>
             )}
             <div>
@@ -205,9 +242,12 @@ const EventsPage = () => {
                 />
                 <button
                   onClick={() => {
-                    if (contributionAmount && parseFloat(contributionAmount) > 0) {
+                    if (
+                      contributionAmount &&
+                      parseFloat(contributionAmount) > 0
+                    ) {
                       handleContribute(event._id, contributionAmount);
-                      setContributionAmount('');
+                      setContributionAmount("");
                       setShowContribute(false);
                     }
                   }}
@@ -244,7 +284,9 @@ const EventsPage = () => {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">All Events</h1>
-              <p className="text-gray-600 mt-2">Discover and support meaningful causes</p>
+              <p className="text-gray-600 mt-2">
+                Discover and support meaningful causes
+              </p>
             </div>
             {user && (
               <Link
@@ -268,7 +310,9 @@ const EventsPage = () => {
                   type="text"
                   placeholder="Search by tags (comma separated)"
                   value={filters.tags}
-                  onChange={(e) => setFilters({ ...filters, tags: e.target.value })}
+                  onChange={(e) =>
+                    setFilters({ ...filters, tags: e.target.value })
+                  }
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 />
               </div>
@@ -278,7 +322,9 @@ const EventsPage = () => {
                 <input
                   type="checkbox"
                   checked={filters.isActive}
-                  onChange={(e) => setFilters({ ...filters, isActive: e.target.checked })}
+                  onChange={(e) =>
+                    setFilters({ ...filters, isActive: e.target.checked })
+                  }
                   className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
                 />
                 <span className="text-sm text-gray-700">Active only</span>
@@ -301,8 +347,12 @@ const EventsPage = () => {
         ) : events.length === 0 ? (
           <div className="text-center py-12">
             <Heart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No events found</h3>
-            <p className="text-gray-600 mb-6">Be the first to create an event and make a difference!</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No events found
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Be the first to create an event and make a difference!
+            </p>
             {user && (
               <Link
                 to="/create-event"
@@ -316,7 +366,7 @@ const EventsPage = () => {
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {events.map(event => (
+              {events.map((event) => (
                 <EventCard key={event._id} event={event} />
               ))}
             </div>
@@ -325,19 +375,29 @@ const EventsPage = () => {
             {pagination.totalPages > 1 && (
               <div className="flex justify-center items-center gap-2">
                 <button
-                  onClick={() => setPagination({ ...pagination, currentPage: pagination.currentPage - 1 })}
+                  onClick={() =>
+                    setPagination({
+                      ...pagination,
+                      currentPage: pagination.currentPage - 1,
+                    })
+                  }
                   disabled={pagination.currentPage === 1}
                   className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Previous
                 </button>
-                
+
                 <span className="px-4 py-2 text-gray-700">
                   Page {pagination.currentPage} of {pagination.totalPages}
                 </span>
-                
+
                 <button
-                  onClick={() => setPagination({ ...pagination, currentPage: pagination.currentPage + 1 })}
+                  onClick={() =>
+                    setPagination({
+                      ...pagination,
+                      currentPage: pagination.currentPage + 1,
+                    })
+                  }
                   disabled={pagination.currentPage === pagination.totalPages}
                   className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
