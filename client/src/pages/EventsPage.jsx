@@ -219,45 +219,14 @@ const EventsPage = () => {
               View Details
             </Link>
             {user && (
-              <button
-                onClick={() => setShowContribute(!showContribute)}
-                className="flex-1 bg-teal-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-teal-700 transition-colors"
+              <Link
+                to={`/contribute/${event._id}`}
+                className="flex-1 bg-teal-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-teal-700 transition-colors text-center"
               >
                 Contribute
-              </button>
+              </Link>
             )}
           </div>
-
-          {/* Contribution Form */}
-          {showContribute && user && (
-            <div className="mt-4 p-4 bg-gray-50 rounded-md">
-              <div className="flex gap-2">
-                <input
-                  type="number"
-                  placeholder="Amount (₹)"
-                  value={contributionAmount}
-                  onChange={(e) => setContributionAmount(e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  min="1"
-                />
-                <button
-                  onClick={() => {
-                    if (
-                      contributionAmount &&
-                      parseFloat(contributionAmount) > 0
-                    ) {
-                      handleContribute(event._id, contributionAmount);
-                      setContributionAmount("");
-                      setShowContribute(false);
-                    }
-                  }}
-                  className="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700 transition-colors"
-                >
-                  Donate
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     );
